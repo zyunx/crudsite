@@ -9,9 +9,14 @@
 <body>
 <h1>Login Form</h1>
 <form action="login" method="post">
-	User name: <input type="text" name="userName" />
+	User name: <input id="userNameInput" type="text" name="userName" />
 	<p/>Password: <input type="password" name="password" />
 	<p/><input type="submit" value="login"/>
 </form>
+<script>
+(function() {
+	document.getElementById("userNameInput").focus();	
+})();
+</script>
 </body>
 </html>

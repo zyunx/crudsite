@@ -5,9 +5,8 @@ public interface AuthBO {
 	boolean doesGroupExist(String groupName);
 	boolean doesPermissionExist(String permissionName);
 	
-	boolean doesGroupHavePermission(String groupName, String permissionName);
-	
 	boolean isUserInGroup(String userName, String groupName);
+	boolean doesGroupHavePermission(String groupName, String permissionName);
+	boolean doesUserHimselfHavePermission(String userName, String permissionName);
 	
-	boolean checkPermission(String userName, String permissionName);
 }

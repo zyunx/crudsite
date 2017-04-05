@@ -15,9 +15,10 @@
 <c:forEach items="${users}" var="user">  
  	<tr>
  		<td>${user.userName}</td>
- 		<td><a href="user?userName=${user.userName}">edit</a>
+ 		<td><a href="changeUserPassword?userName=${user.userName}">password</a>
  		| <a href="user/delete?userName=${user.userName}">delete</a>
- 		| <a href="listGroupsOfUser?userName=${user.userName}">groups</a></td>
+ 		| <a href="listGroupsOfUser?userName=${user.userName}">groups</a>
+ 		| <a href="listPermissionsOfUser?userName=${user.userName}">permissions</a></td>
  	</tr>
 </c:forEach>
 </table>

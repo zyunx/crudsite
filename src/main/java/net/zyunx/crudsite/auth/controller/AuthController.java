@@ -21,6 +21,7 @@ import net.zyunx.crudsite.auth.Group;
 import net.zyunx.crudsite.auth.GroupPermission;
 import net.zyunx.crudsite.auth.Permission;
 import net.zyunx.crudsite.auth.User;
+import net.zyunx.crudsite.auth.UserPermission;
 import net.zyunx.crudsite.auth.bo.AuthBO;
 import net.zyunx.crudsite.commons.dao.exception.DAOException;
 import net.zyunx.crudsite.commons.dao.jdbc.ResultSetCallback;
@@ -68,9 +69,11 @@ public class AuthController {
 	}
 	
 	
-
+	private String urlOfListUsers() {
+		return "auth/users";
+	}
 	@RequestMapping(value="/users", method=RequestMethod.GET)
-	public ModelAndView users() {
+	public ModelAndView listUsers() {
 		final List<User> userList = new ArrayList<User>(100);
 		this.sqlTemplate.query("select user_name from users", 
 				new Object[]{}, new ResultSetCallback<Object>() {
@@ -132,14 +135,25 @@ public class AuthController {
 				"auth/users", "创建用户成功", this.getRedirectTime());
 	}
 	
-	@RequestMapping(value="/user/update", method=RequestMethod.POST)
-	public ModelAndView updateUser(User user, RedirectAttributes redirectAttributes) throws Exception {
-		logger.info("update user " + user.getUserName());
+	@RequestMapping(value="/changeUserPassword", method=RequestMethod.GET)
+	public ModelAndView changeUserPasswordForm(String userName, RedirectAttributes redirectAttributes) throws Exception {
+		if (!this.authBO.doesUserExist(userName)) {
+			return MessageController.redirectView(redirectAttributes, 
+					"auth/users", userName + "用户不存在");
+		}
+		ModelAndView mv = new ModelAndView();
+		mv.addObject(userName);
+		mv.setViewName("/auth/user/changeUserPassword");
+		return mv;
+	}
+	@RequestMapping(value="/changeUserPassword", method=RequestMethod.POST)
+	public ModelAndView changeUserPassword(User user, RedirectAttributes redirectAttributes) throws Exception {
+		logger.info("change user " + user.getUserName() + "'s password");
 		this.sqlTemplate.execute("update users set password = ? where user_name = ?",
 				new Object[] {user.getPassword(), user.getUserName()});
 		
 		return MessageController.redirectView(redirectAttributes, 
-				"auth/users", "更新用户成功", this.getRedirectTime());
+				"auth/users", "修改" + user.getUserName() + "用户密码成功");
 	}
 	
 	@RequestMapping(value="/user/delete", method=RequestMethod.GET)
@@ -465,6 +479,139 @@ public class AuthController {
 		return MessageController.redirectView(redirectAttributes,
 				urlOfListPermissionsOfGroup(groupName),
 				"取回" + groupName + "组权限" + permissionName + "成功");
+	}
+	
+	
+	private String urlOfListPermissionsOfUser(String userName) {
+		return "auth/listPermissionsOfUser?userName=" + userName;
+	}
+	@RequestMapping(value="/listPermissionsOfUser", method=RequestMethod.GET)
+	public ModelAndView listPermissionsOfUser(String userName,
+			RedirectAttributes redirectAttributes) {
+		
+		if (!this.authBO.doesUserExist(userName)) {
+			return MessageController.redirectView(redirectAttributes,
+					"auth/users", 
+					"用户" + userName + "不存在");
+		}
+		
+		final List<UserPermission> userPermissionListOfHimself = new ArrayList<UserPermission>(100);
+		this.sqlTemplate.query("select user_name, permission_name from user_permissions"
+				+ " where user_name = ?",
+				new Object[]{userName},
+				new ResultSetCallback<Void>() {
+					
+					public Void doWithResultSet(ResultSet rs) throws SQLException {
+						while (rs.next()) {
+							UserPermission up = new UserPermission();
+							up.setPermissionName(rs.getString("permission_name"));
+							up.setUserName(rs.getString("user_name"));
+							userPermissionListOfHimself.add(up);
+						}
+						return null;
+					}
+					
+				});
+		
+		final List<UserPermission> userPermissionListOfGroups = new ArrayList<UserPermission>(100);
+		this.sqlTemplate.query("select"
+				+ " ug.user_name as user_name,"
+				+ " gp.permission_name as permission_name"
+				+ " from user_groups ug, group_permissions gp"
+				+ " where ug.group_name = gp.group_name and user_name = ?",
+				new Object[]{userName},
+				new ResultSetCallback<Void>() {
+					
+					public Void doWithResultSet(ResultSet rs) throws SQLException {
+						while (rs.next()) {
+							UserPermission up = new UserPermission();
+							up.setPermissionName(rs.getString("permission_name"));
+							up.setUserName(rs.getString("user_name"));
+							userPermissionListOfGroups.add(up);
+						}
+						return null;
+					}
+					
+				});
+		
+		ModelAndView mv = new ModelAndView();
+		mv.addObject("userPermissionsOfHimself", userPermissionListOfHimself);
+		mv.addObject("userPermissionsOfGroups", userPermissionListOfGroups);
+		mv.addObject("userName", userName);
+		mv.setViewName("/auth/listPermissionsOfUser");
+		return mv;
+	}
+	
+	@RequestMapping(value="/grantPermissionToUser", method=RequestMethod.POST)
+	public ModelAndView grantPermissionToUser(String permissionName, String userName,
+			RedirectAttributes redirectAttributes) {
+		if (!this.authBO.doesUserExist(userName)) {
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListUsers(),
+					userName + "用户不存在");
+		}
+		
+		if (!this.authBO.doesPermissionExist(permissionName)) {
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListPermissionsOfUser(userName),
+					permissionName + "权限不存在");
+		}
+		
+		if (this.authBO.doesUserHimselfHavePermission(userName, permissionName)) {
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListPermissionsOfUser(userName),
+					userName + "用户自身已拥有" + permissionName + "权限");
+		}
+		
+		try {
+			this.sqlTemplate.execute("insert into user_permissions (user_name, permission_name) values (?, ?)",
+					new Object[] {userName, permissionName});
+		} catch (DAOException e) {
+			logger.warn("grant permission to user failed", e);
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListPermissionsOfUser(userName),
+					"授予" + permissionName + "权限给" + userName + "用户失败");
+		}
+		
+		return MessageController.redirectView(redirectAttributes,
+				urlOfListPermissionsOfUser(userName),
+				"授予" + permissionName + "权限给" + userName + "用户成功");
+	}
+	
+	@RequestMapping(value="revokePermissionFromUser", method=RequestMethod.POST)
+	public ModelAndView revokePermissionFromUser(String permissionName, String userName,
+			RedirectAttributes redirectAttributes) {
+		if (!this.authBO.doesUserExist(userName)) {
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListUsers(),
+					userName + "用户不存在");
+		}
+		
+		if (!this.authBO.doesPermissionExist(permissionName)) {
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListPermissionsOfUser(userName),
+					permissionName + "权限不存在");
+		}
+		
+		if (!this.authBO.doesUserHimselfHavePermission(userName, permissionName)) {
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListPermissionsOfUser(userName),
+					userName + "用户自身没有" + permissionName + "权限");
+		}
+		
+		try {
+			this.sqlTemplate.execute("delete from user_permissions where user_name = ? and permission_name = ?",
+					new Object[] {userName, permissionName});
+		} catch (DAOException e) {
+			logger.warn("grant permission to user failed", e);
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListPermissionsOfUser(userName),
+					"从" + userName + "用户剥夺" + permissionName + "权限失败");
+		}
+		
+		return MessageController.redirectView(redirectAttributes,
+				urlOfListPermissionsOfUser(userName),
+				"从" + userName + "用户剥夺" + permissionName + "权限成功");
 	}
 	
 }

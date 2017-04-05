@@ -38,7 +38,7 @@ public class MessageController {
 	}
 	
 	public static ModelAndView redirectView(RedirectAttributes redirectAttributes, 
-			String redirectUrl, String message) {
-		return redirectView(redirectAttributes, redirectUrl, message, DEFAULT_REDIRECT_TIME);
+			String gotoUrl, String message) {
+		return redirectView(redirectAttributes, gotoUrl, message, DEFAULT_REDIRECT_TIME);
 	}
 }

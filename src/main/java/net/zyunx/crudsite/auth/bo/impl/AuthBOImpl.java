@@ -27,11 +27,6 @@ public class AuthBOImpl implements AuthBO {
 		this.sqlTemplate = sqlTemplate;
 	}
 
-	public boolean checkPermission(String userName, String permissionName) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
 	public boolean doesUserExist(String userName) {
 		return this.sqlTemplate.query("select user_name from users where user_name = ?",
 				new Object[] {userName},
@@ -67,6 +62,13 @@ public class AuthBOImpl implements AuthBO {
 		return this.sqlTemplate.query("select group_name, permission_name from group_permissions"
 				+ " where group_name = ? and permission_name = ?",
 				new Object[] {groupName, permissionName},
+				this.doesRecordExistResultSetCallback);
+	}
+
+	public boolean doesUserHimselfHavePermission(String userName, String permissionName) {
+		return this.sqlTemplate.query("select user_name, permission_name from user_permissions"
+				+ " where user_name = ? and permission_name = ?",
+				new Object[] {userName, permissionName},
 				this.doesRecordExistResultSetCallback);
 	}
 
