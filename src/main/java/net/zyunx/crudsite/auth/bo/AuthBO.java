@@ -11,4 +11,5 @@ public interface AuthBO {
 	boolean doesAnyGroupHavePermission(String permissionName);
 	boolean doesUserHimselfHavePermission(String userName, String permissionName);
 	boolean doesAnyUserHimselfHavePermission(String permissionName);
+	boolean doesUserHavePermission(String userName, String permissionName);
 }

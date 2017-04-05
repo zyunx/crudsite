@@ -90,4 +90,16 @@ public class AuthBOImpl implements AuthBO {
 				this.doesRecordExistResultSetCallback);
 	}
 
+	public boolean doesUserHavePermission(String userName, String permissionName) {
+		if (this.doesUserHimselfHavePermission(userName, permissionName)) {
+			return true;
+		}
+		
+		return this.sqlTemplate.query("select gp.permission_name"
+				+ " from user_groups ug left join group_permissions gp on ug.group_name = gp.group_name"
+				+ " where ug.user_name = ? and gp.permission_name = ?",
+				new Object[]{userName, permissionName},
+				this.doesRecordExistResultSetCallback);
+	}
+
 }

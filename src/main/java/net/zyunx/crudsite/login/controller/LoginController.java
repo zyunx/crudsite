@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import net.zyunx.crudsite.auth.AuthException;
 import net.zyunx.crudsite.auth.AuthService;
+import net.zyunx.crudsite.auth.bo.AuthBO;
 import net.zyunx.crudsite.login.LoginUtil;
 import net.zyunx.crudsite.message.controller.MessageController;
 
@@ -22,6 +23,9 @@ public class LoginController {
 	
 	@Autowired
 	AuthService authService;
+	
+	@Autowired
+	AuthBO authBO;
 	
 	@RequestMapping(value="login", method=RequestMethod.GET)
 	public ModelAndView loginForm() {
@@ -36,6 +40,9 @@ public class LoginController {
 			HttpServletRequest request) {
 		logger.info(userName + " attempt to login");
 		try {
+			if (!this.authBO.doesUserHavePermission(userName, "login")) {
+				return MessageController.redirectView(redirectAttributes, "login", userName + "用户不允许登陆");
+			}
 			this.authService.authenticate(userName, password);
 			LoginUtil.login(request, userName);
 			logger.info(userName + " login success");
