@@ -9,21 +9,26 @@
 </head>
 <body>
 <h1>Auth Permission</h1>
+<h2>Create Permission</h2>
+<form action="createPermission" method="post">
+	Permission name: <input type="text" name="permissionName"/>
+	<p/>
+	<input type="submit" value="create"/>
+</form>
+
 <h2>Permission List</h2>
 <table>
 <tr><th>permission</th><th>action</th></tr>
 <c:forEach items="${permissions}" var="permission">  
  	<tr>
  		<td>${permission.permissionName}</td>
- 		<td><a href="permission/delete?permissionName=${permission.permissionName}">delete</a></td>
+ 		<td><form action="deletePermission" method="post">
+ 			<input type="hidden" name="permissionName" value="${permission.permissionName}"/>
+ 			<input type="submit" value="delete"/>
+ 		</form></td>
  	</tr>
 </c:forEach>
 </table>
-<h2>Create Permission</h2>
-<form action="permission/create" method="post">
-	Permission name: <input type="text" name="permissionName"/>
-	<p/>
-	<input type="submit" value="create"/>
-</form>
+
 </body>
 </html>

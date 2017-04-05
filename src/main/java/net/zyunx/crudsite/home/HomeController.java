@@ -10,7 +10,7 @@ import org.springframework.web.servlet.ModelAndView;
 public class HomeController {
 	Log logger = LogFactory.getLog(HomeController.class);
 	
-	@RequestMapping("/home")
+	@RequestMapping(value={"/home","/"})
 	public ModelAndView play(String username, String password) {
 		ModelAndView mv = new ModelAndView();
 		mv.setViewName("/home");

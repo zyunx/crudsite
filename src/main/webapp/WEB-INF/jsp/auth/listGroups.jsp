@@ -9,22 +9,26 @@
 </head>
 <body>
 <h1>Auth Group</h1>
+<h2>Create Group</h2>
+<form action="createGroup" method="post">
+	Group name: <input type="text" name="groupName"/>
+	<p/>
+	<input type="submit" value="create"/>
+</form>
+
 <h2>Group List</h2>
 <table>
 <tr><th>group name</th><th>action</th></tr>
 <c:forEach items="${groups}" var="g">  
  	<tr>
  		<td>${g.groupName}</td>
- 		<td><a href="group/delete?groupName=${g.groupName}">delete</a>
+ 		<td><form style="display:inline-block" action="deleteGroup" method="post">
+ 			<input type="hidden" name="groupName" value="${g.groupName}"/>
+ 			<input type="submit" value="delete"/>
+ 		</form>
  		| <a href="listPermissionsOfGroup?groupName=${g.groupName}">权限</a></td>
  	</tr>
 </c:forEach>
 </table>
-<h2>Create Group</h2>
-<form action="group/create" method="post">
-	Group name: <input type="text" name="groupName"/>
-	<p/>
-	<input type="submit" value="create"/>
-</form>
 </body>
 </html>

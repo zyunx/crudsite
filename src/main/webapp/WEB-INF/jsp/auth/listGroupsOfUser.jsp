@@ -9,6 +9,14 @@
 </head>
 <body>
 <h1>Auth User</h1>
+<h2>Join group</h2>
+<form action="letUserJoinGroup" method="post">
+	Group name: <input type="text" name="groupName"/>
+	<p/>
+	<input type="hidden" name="userName" value="${userName}"/>
+	<input type="submit" value="join"/>
+</form>
+
 <h2>User's groups</h2>
 <table>
 <tr><th>group name</th><th>action</th></tr>
@@ -16,7 +24,7 @@
  	<tr>
  		<td>${g.groupName}</td>
  		<td>
- 			<form action="userLeaveGroup" method="post">
+ 			<form action="letUserLeaveGroup" method="post">
  				<input type="hidden" name="userName" value="${userName}"/>
  				<input type="hidden" name="groupName" value="${g.groupName}"/>
  				<input type="submit" value="delete"/>
@@ -25,12 +33,6 @@
  	</tr>
 </c:forEach>
 </table>
-<h2>Join group</h2>
-<form action="userJoinGroup" method="post">
-	Group name: <input type="text" name="groupName"/>
-	<p/>
-	<input type="hidden" name="userName" value="${userName}"/>
-	<input type="submit" value="join"/>
-</form>
+
 </body>
 </html>

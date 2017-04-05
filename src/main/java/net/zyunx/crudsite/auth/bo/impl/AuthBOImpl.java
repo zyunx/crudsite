@@ -72,4 +72,22 @@ public class AuthBOImpl implements AuthBO {
 				this.doesRecordExistResultSetCallback);
 	}
 
+	public boolean isAnyoneInGroup(String groupName) {
+		return this.sqlTemplate.query("select user_name from user_groups where group_name = ?",
+				new Object[]{groupName},
+				this.doesRecordExistResultSetCallback);
+	}
+
+	public boolean doesAnyGroupHavePermission(String permissionName) {
+		return this.sqlTemplate.query("select group_name from group_permissions where permission_name = ?",
+				new Object[]{permissionName},
+				this.doesRecordExistResultSetCallback);
+	}
+
+	public boolean doesAnyUserHimselfHavePermission(String permissionName) {
+		return this.sqlTemplate.query("select user_name from user_permissions where permission_name = ?",
+				new Object[]{permissionName},
+				this.doesRecordExistResultSetCallback);
+	}
+
 }

@@ -5,8 +5,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,9 +68,9 @@ public class AuthController {
 	
 	
 	private String urlOfListUsers() {
-		return "auth/users";
+		return "auth/listUsers";
 	}
-	@RequestMapping(value="/users", method=RequestMethod.GET)
+	@RequestMapping(value="/listUsers", method=RequestMethod.GET)
 	public ModelAndView listUsers() {
 		final List<User> userList = new ArrayList<User>(100);
 		this.sqlTemplate.query("select user_name from users", 
@@ -93,81 +91,76 @@ public class AuthController {
 		
 		ModelAndView mv = new ModelAndView();
 		mv.addObject("users", userList);
-		mv.setViewName("auth/users");
+		mv.setViewName("auth/listUsers");
 		return mv;
 	}
 	
-	@RequestMapping(value="/user", method=RequestMethod.GET)
-	public ModelAndView userForm(HttpServletRequest request) throws Exception {
-		String userName = request.getParameter("userName");
-		final List<User> userList = new ArrayList<User>(100);
-		this.sqlTemplate.query("select user_name from users where user_name = ?", 
-				new Object[]{ userName }, 
-				new ResultSetCallback<Object>() {
-					public Object doWithResultSet(ResultSet rs) {
-						try {
-							while (rs.next()) {
-								User user = new User();
-								user.setUserName(rs.getString("user_name"));
-								userList.add(user);
-							}
-						} catch (SQLException e) {
-							logger.warn("error get user data from database", e);
-						}
-						return null;
-					}
-		});
-		
-		ModelAndView mv = new ModelAndView();
-		mv.addObject("user", userList.size() > 0 ? userList.get(0) : null);
-		mv.setViewName("auth/user");
-		return mv;
-	}
-	
-	@RequestMapping(value="/user/create", method=RequestMethod.POST)
+	@RequestMapping(value="/createUser", method=RequestMethod.POST)
 	public ModelAndView addUser(User user, RedirectAttributes redirectAttributes) throws Exception {
-		logger.info("add user " + user.getUserName());
+		logger.info("create user " + user.getUserName());
+		
+		if (this.authBO.doesUserExist(user.getUserName())) {
+			return MessageController.redirectView(redirectAttributes, 
+					urlOfListUsers(), user.getUserName() + "已存在");
+		}
 		
 		this.sqlTemplate.execute("insert into users (user_name, password) values (?, ?)",
 				new Object[] {user.getUserName(), user.getPassword()});
 		
 		return MessageController.redirectView(redirectAttributes, 
-				"auth/users", "创建用户成功", this.getRedirectTime());
+				urlOfListUsers(), "创建用户成功", this.getRedirectTime());
 	}
 	
 	@RequestMapping(value="/changeUserPassword", method=RequestMethod.GET)
 	public ModelAndView changeUserPasswordForm(String userName, RedirectAttributes redirectAttributes) throws Exception {
 		if (!this.authBO.doesUserExist(userName)) {
 			return MessageController.redirectView(redirectAttributes, 
-					"auth/users", userName + "用户不存在");
+					urlOfListUsers(), userName + "用户不存在");
 		}
 		ModelAndView mv = new ModelAndView();
 		mv.addObject(userName);
-		mv.setViewName("/auth/user/changeUserPassword");
+		mv.setViewName("/auth/changeUserPassword");
 		return mv;
 	}
 	@RequestMapping(value="/changeUserPassword", method=RequestMethod.POST)
 	public ModelAndView changeUserPassword(User user, RedirectAttributes redirectAttributes) throws Exception {
-		logger.info("change user " + user.getUserName() + "'s password");
+		String userName = user.getUserName();
+		String password = user.getPassword();
+		
+		logger.info("change user " + userName + "'s password");
+		
+		if (!this.authBO.doesUserExist(userName)) {
+			return MessageController.redirectView(redirectAttributes, 
+					urlOfListUsers(), userName + "用户不存在");
+		}
+		
 		this.sqlTemplate.execute("update users set password = ? where user_name = ?",
-				new Object[] {user.getPassword(), user.getUserName()});
+				new Object[] {password, userName});
 		
 		return MessageController.redirectView(redirectAttributes, 
-				"auth/users", "修改" + user.getUserName() + "用户密码成功");
+				urlOfListUsers(), "修改" + userName + "用户密码成功");
 	}
 	
-	@RequestMapping(value="/user/delete", method=RequestMethod.GET)
+	@RequestMapping(value="/deleteUser", method=RequestMethod.POST)
 	public ModelAndView deleteUser(String userName, RedirectAttributes redirectAttributes) {
 		logger.info("delete user " + userName);
+		
+		if (!this.authBO.doesUserExist(userName)) {
+			return MessageController.redirectView(redirectAttributes, 
+					urlOfListUsers(), userName + "用户不存在");
+		}
+		
 		this.sqlTemplate.execute("delete from users where user_name = ?",
 				new Object[] {userName});
 		
 		return MessageController.redirectView(redirectAttributes, 
-				"auth/users", "删除用户成功", this.getRedirectTime());
+				urlOfListUsers(), "删除" + userName + "用户成功", this.getRedirectTime());
 	}
 	
-	
-	@RequestMapping(value="/groups", method=RequestMethod.GET)
+	private String urlOfListGroups() {
+		return "auth/listGroups";
+	}
+	@RequestMapping(value="/listGroups", method=RequestMethod.GET)
 	public ModelAndView listGroups() {
 		final List<Group> groupList = new ArrayList<Group>(100);
 		this.sqlTemplate.query("select group_name from groups", 
@@ -190,33 +183,53 @@ public class AuthController {
 		});
 		ModelAndView mv = new ModelAndView();
 		mv.addObject("groups", groupList);
-		mv.setViewName("/auth/group/groups");
+		mv.setViewName("/auth/listGroups");
 		return mv;
 	}
 	
-	@RequestMapping(value="/group/create", method=RequestMethod.POST)
+	@RequestMapping(value="/createGroup", method=RequestMethod.POST)
 	public ModelAndView addGroup(Group group, RedirectAttributes redirectAttributes) throws Exception {
-		logger.info("add group " + group.getGroupName());
+		String groupName = group.getGroupName();
+		logger.info("create group " + groupName);
 		
+		if (this.authBO.doesGroupExist(groupName)) {
+			return MessageController.redirectView(redirectAttributes, 
+					urlOfListGroups(), groupName + "组已存在");
+		}
 		this.sqlTemplate.execute("insert into groups (group_name) values (?)",
 				new Object[] {group.getGroupName()});
 		
 		return MessageController.redirectView(redirectAttributes, 
-				"auth/groups", "创建组成功", this.getRedirectTime());
+				urlOfListGroups(), "创建" + groupName + "组成功");
 	}
 	
-	@RequestMapping(value="/group/delete", method=RequestMethod.GET)
+	@RequestMapping(value="/deleteGroup", method=RequestMethod.POST)
 	public ModelAndView deleteGroup(String groupName, RedirectAttributes redirectAttributes) {
 		logger.info("delete group " + groupName);
+		
+		if (!this.authBO.doesGroupExist(groupName)) {
+			if (this.authBO.doesGroupExist(groupName)) {
+				return MessageController.redirectView(redirectAttributes, 
+						urlOfListGroups(), groupName + "组不存在");
+			}
+		}
+		
+		if (this.authBO.isAnyoneInGroup(groupName)) {
+			return MessageController.redirectView(redirectAttributes, 
+					urlOfListGroups(), groupName + "组有关联用户,无法删除");
+		}
+		
 		this.sqlTemplate.execute("delete from groups where group_name = ?",
 				new Object[] {groupName});
 		
 		return MessageController.redirectView(redirectAttributes, 
-				"auth/groups", "删除组成功", this.getRedirectTime());
+				urlOfListGroups(), "删除" + groupName + "组成功");
 	}
 	
-	
-	@RequestMapping(value="/permissions", method=RequestMethod.GET)
+	private String urlOfListPermissions() {
+		return "auth/listPermissions";
+	}
+	@RequestMapping(value="/listPermissions", method=RequestMethod.GET)
 	public ModelAndView listPermissions() {
 		ModelAndView mv = new ModelAndView();
 		final List<Permission> permissionList = new ArrayList<Permission>(100);
@@ -238,37 +251,61 @@ public class AuthController {
 					}
 		});
 		mv.addObject("permissions", permissionList);
-		mv.setViewName("/auth/permission/permissions");
+		mv.setViewName("/auth/listPermissions");
 		return mv;
 	}
 	
-	@RequestMapping(value="/permission/create", method=RequestMethod.POST)
+	@RequestMapping(value="/createPermission", method=RequestMethod.POST)
 	public ModelAndView createPermission(String permissionName,
 			RedirectAttributes redirectAttributes) {
+		if (this.authBO.doesPermissionExist(permissionName)) {
+			return MessageController.redirectView(redirectAttributes, urlOfListPermissions(), 
+					permissionName + "权限已存在");
+		}
+		
 		try {
 			this.sqlTemplate.execute("insert into permissions (permission_name) values (?)",
 					new Object[] {permissionName});
 		} catch (DAOException e) {
-			return MessageController.redirectView(redirectAttributes, "auth/permissions", 
-					"创建权限失败", this.getRedirectTime());
+			return MessageController.redirectView(redirectAttributes, urlOfListPermissions(), 
+					"创建" + permissionName + "权限失败", this.getRedirectTime());
 		}
 
-		return MessageController.redirectView(redirectAttributes, "auth/permissions", 
-				"创建权限成功", this.getRedirectTime());
+		return MessageController.redirectView(redirectAttributes, urlOfListPermissions(), 
+				"创建" + permissionName + "权限成功", this.getRedirectTime());
 	}
 	
-	@RequestMapping(value="/permission/delete")
+	@RequestMapping(value="/deletePermission")
 	public ModelAndView deletePermission(String permissionName,
 			RedirectAttributes redirectAttributes) {
+		
+		if (!this.authBO.doesPermissionExist(permissionName)) {
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListPermissions(), 
+					permissionName + "权限已存在");
+		}
+		
+		if (this.authBO.doesAnyGroupHavePermission(permissionName)) {
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListPermissions(), 
+					permissionName + "权限有关联组,无法删除");
+		}
+		
+		if (this.authBO.doesAnyUserHimselfHavePermission(permissionName)) {
+			return MessageController.redirectView(redirectAttributes,
+					urlOfListPermissions(), 
+					permissionName + "权限有关联用户,无法删除");
+		}
+		
 		try {
 			this.sqlTemplate.execute("delete from permissions where permission_name = ?",
 					new Object[] {permissionName});
 		} catch (DAOException e) {
-			return MessageController.redirectView(redirectAttributes, "auth/permissions", 
+			return MessageController.redirectView(redirectAttributes, urlOfListPermissions(), 
 					"删除权限失败", this.getRedirectTime());
 		}
 
-		return MessageController.redirectView(redirectAttributes, "auth/permissions", 
+		return MessageController.redirectView(redirectAttributes, urlOfListPermissions(), 
 				"删除权限成功", this.getRedirectTime());
 	}
 	
@@ -277,13 +314,13 @@ public class AuthController {
 		return "auth/listGroupsOfUser?userName=" + userName;
 	}
 	
-	@RequestMapping(value="/userLeaveGroup", method=RequestMethod.POST)
+	@RequestMapping(value="/letUserLeaveGroup", method=RequestMethod.POST)
 	public ModelAndView userLeaveGroup(String userName, String groupName,
 			RedirectAttributes redirectAttributes) {
 		
 		if (!this.authBO.doesUserExist(userName)) {
 			return MessageController.redirectView(redirectAttributes,
-					"auth/users", 
+					urlOfListUsers(), 
 					"用户" + userName + "不存在");
 		}
 		
@@ -306,13 +343,13 @@ public class AuthController {
 				urlOfListGroupsOfUser(userName),
 				userName + "离开" + groupName + "组");
 	}
-	@RequestMapping(value="/userJoinGroup", method=RequestMethod.POST)
+	@RequestMapping(value="/letUserJoinGroup", method=RequestMethod.POST)
 	public ModelAndView userJoinGroup(String userName, String groupName,
 			RedirectAttributes redirectAttributes) {
 		
 		if (!this.authBO.doesUserExist(userName)) {
 			return MessageController.redirectView(redirectAttributes,
-					"auth/users", 
+					urlOfListUsers(), 
 					"用户" + userName + "不存在");
 		}
 		
@@ -368,9 +405,7 @@ public class AuthController {
 		return mv;
 	}
 	
-	private String urlOfListGroups() {
-		return "auth/groups";
-	}
+	
 	private String urlOfListPermissionsOfGroup(String groupName) {
 		return "auth/listPermissionsOfGroup?groupName=" + groupName;
 	}
