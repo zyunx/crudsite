@@ -1,5 +1,10 @@
 package net.zyunx.crudsite.auth.bo;
 
+import java.util.List;
+
+import net.zyunx.crudsite.auth.User;
+import net.zyunx.crudsite.commons.dao.Range;
+
 public interface AuthBO {
 	boolean doesUserExist(String userName);
 	boolean doesGroupExist(String groupName);
@@ -12,4 +17,7 @@ public interface AuthBO {
 	boolean doesUserHimselfHavePermission(String userName, String permissionName);
 	boolean doesAnyUserHimselfHavePermission(String permissionName);
 	boolean doesUserHavePermission(String userName, String permissionName);
+	
+	int countUsers();
+	List<User> listUsers(Range range);
 }

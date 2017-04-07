@@ -2,17 +2,24 @@ package net.zyunx.crudsite.auth.bo.impl;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import net.zyunx.crudsite.auth.User;
 import net.zyunx.crudsite.auth.bo.AuthBO;
+import net.zyunx.crudsite.commons.dao.Range;
 import net.zyunx.crudsite.commons.dao.jdbc.ResultSetCallback;
 import net.zyunx.crudsite.commons.dao.jdbc.SqlTemplate;
 
 @Component
 public class AuthBOImpl implements AuthBO {
-
+	protected Log logger = LogFactory.getLog(AuthBOImpl.class);
+	
 	@Autowired
 	private SqlTemplate sqlTemplate;
 	
@@ -100,6 +107,43 @@ public class AuthBOImpl implements AuthBO {
 				+ " where ug.user_name = ? and gp.permission_name = ?",
 				new Object[]{userName, permissionName},
 				this.doesRecordExistResultSetCallback);
+	}
+
+	public int countUsers() {
+		return this.sqlTemplate.query("select count(*) as user_count from users", 
+				new Object[]{},
+				new ResultSetCallback<Integer>() {
+					public Integer doWithResultSet(ResultSet rs) {
+						try {
+							rs.next();
+							return rs.getInt("user_count");
+						} catch (SQLException e) {
+							logger.warn("error get user data from database", e);
+							return 0;
+						}
+					}
+		});
+	}
+
+	public List<User> listUsers(Range range) {
+		final List<User> userList = new ArrayList<User>(range.getCount());
+		this.sqlTemplate.query("select user_name from users limit ?, ?", 
+				new Object[]{range.getStart(), range.getCount()},
+				new ResultSetCallback<Object>() {
+					public Object doWithResultSet(ResultSet rs) {
+						try {
+							while (rs.next()) {
+								User user = new User();
+								user.setUserName(rs.getString("user_name"));
+								userList.add(user);
+							}
+						} catch (SQLException e) {
+							logger.warn("error get user data from database", e);
+						}
+						return null;
+					}
+		});
+		return userList;
 	}
 
 }

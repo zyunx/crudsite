@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,8 @@ import net.zyunx.crudsite.auth.Permission;
 import net.zyunx.crudsite.auth.User;
 import net.zyunx.crudsite.auth.UserPermission;
 import net.zyunx.crudsite.auth.bo.AuthBO;
+import net.zyunx.crudsite.commons.controller.Page;
+import net.zyunx.crudsite.commons.dao.Range;
 import net.zyunx.crudsite.commons.dao.exception.DAOException;
 import net.zyunx.crudsite.commons.dao.jdbc.ResultSetCallback;
 import net.zyunx.crudsite.commons.dao.jdbc.SqlTemplate;
@@ -71,26 +75,17 @@ public class AuthController {
 		return "auth/listUsers";
 	}
 	@RequestMapping(value="/listUsers", method=RequestMethod.GET)
-	public ModelAndView listUsers() {
-		final List<User> userList = new ArrayList<User>(100);
-		this.sqlTemplate.query("select user_name from users", 
-				new Object[]{}, new ResultSetCallback<Object>() {
-					public Object doWithResultSet(ResultSet rs) {
-						try {
-							while (rs.next()) {
-								User user = new User();
-								user.setUserName(rs.getString("user_name"));
-								userList.add(user);
-							}
-						} catch (SQLException e) {
-							logger.warn("error get user data from database", e);
-						}
-						return null;
-					}
-		});
+	public ModelAndView listUsers(HttpServletRequest request) {
+		int userCount = this.authBO.countUsers();
+		
+		Page page = Page.valueOf(request, userCount);
+		
+		List<User> users = this.authBO.listUsers(page.toRange());
 		
 		ModelAndView mv = new ModelAndView();
-		mv.addObject("users", userList);
+
+		mv.addObject("users", users);
+		mv.addObject("page", page);
 		mv.setViewName("auth/listUsers");
 		return mv;
 	}

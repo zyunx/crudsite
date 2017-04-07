@@ -18,6 +18,8 @@
 </form>
 
 <h2>User List</h2>
+<p>共${page.totalRows}条记录, 当前${page.currentPageRows}条记录</p>
+<p>共${page.totalPages}页, 当前第${page.pageIndex}页, 每页${page.pageRows}条记录</p>
 <table>
 <tr><th>user name</th><th>action</th></tr>
 <c:forEach items="${users}" var="user">
