@@ -22,7 +22,7 @@
     	<filter-class>net.zyunx.crudsite.login.LoginFilter</filter-class>
     	<init-param>
     		<param-name>excludes</param-name>
-    		<param-value>/login,/logout</param-value>
+    		<param-value>/login,/logout,/message</param-value>
     	</init-param>
     </filter>
     <filter-mapping>

@@ -31,3 +31,11 @@ create table group_permissions (
 	permission_name varchar(20)
 );
 alter table group_permissions add constraint group_permissions_pk primary key (group_name, permission_name);
+
+
+-- 初始数据
+insert into users (user_name, password) values ('root', 'root');
+insert into permissions (permission_name) values ('login');
+insert into user_permissions (user_name, permission_name) values ('root', 'login');
+
+ 

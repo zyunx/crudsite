@@ -6,3 +6,6 @@ create table menu_items (
 	
 alter table menu_items add constraint menu_item_pk primary key (item_name);
 alter table menu_items add constraint menu_item_parent_fk foreign key (item_parent) references menu_items (item_name);
+
+-- 根菜单
+insert into menu_items (item_name, item_text) values ('root', '所有菜单');

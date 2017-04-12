@@ -16,7 +16,7 @@
         class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
             <array>
-                <value>classpath:dbconfig.properties</value>
+                <value>WEB-INF/dbconfig.properties</value>
             </array>
         </property>
     </bean>
