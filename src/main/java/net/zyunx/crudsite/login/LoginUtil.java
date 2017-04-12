@@ -22,4 +22,9 @@ public class LoginUtil {
 		session.removeAttribute(PRINCIPAL_KEY);
 	}
 	
+	public static String getUserName(HttpServletRequest request) {
+		HttpSession session = request.getSession();
+		return (String) session.getAttribute(PRINCIPAL_KEY);
+	}
+	
 }

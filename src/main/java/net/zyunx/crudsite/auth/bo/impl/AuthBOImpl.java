@@ -15,6 +15,7 @@ import net.zyunx.crudsite.auth.bo.AuthBO;
 import net.zyunx.crudsite.commons.dao.Range;
 import net.zyunx.crudsite.commons.dao.jdbc.ResultSetCallback;
 import net.zyunx.crudsite.commons.dao.jdbc.SqlTemplate;
+import net.zyunx.crudsite.commons.dao.jdbc.callback.DoesRecordExistResultSetCallback;
 
 @Component
 public class AuthBOImpl implements AuthBO {
@@ -52,13 +53,6 @@ public class AuthBOImpl implements AuthBO {
 				this.doesRecordExistResultSetCallback);
 	}
 	
-	
-	class DoesRecordExistResultSetCallback implements ResultSetCallback<Boolean> {
-		public Boolean doWithResultSet(ResultSet rs) throws SQLException {
-			return rs.next();
-		}
-	}
-
 	public boolean doesPermissionExist(String permissionName) {
 		return this.sqlTemplate.query("select permission_name from permissions where permission_name = ?",
 				new Object[] {permissionName},

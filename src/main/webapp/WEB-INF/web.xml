@@ -20,17 +20,13 @@
     <filter>
     	<filter-name>loginFilter</filter-name>
     	<filter-class>net.zyunx.crudsite.login.LoginFilter</filter-class>
+    	<init-param>
+    		<param-name>excludes</param-name>
+    		<param-value>/login,/logout</param-value>
+    	</init-param>
     </filter>
     <filter-mapping>
     	<filter-name>loginFilter</filter-name>
-    	<url-pattern>/auth/*</url-pattern>
-    </filter-mapping>
-    <filter-mapping>
-    	<filter-name>loginFilter</filter-name>
-    	<url-pattern>/</url-pattern>
-    </filter-mapping>
-    <filter-mapping>
-    	<filter-name>loginFilter</filter-name>
-    	<url-pattern>/home</url-pattern>
+    	<url-pattern>/*</url-pattern>
     </filter-mapping>
 </web-app>
