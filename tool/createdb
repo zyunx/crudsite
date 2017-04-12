@@ -1,0 +1,24 @@
+#!/bin/bash
+SQL_SCRIPTS="auth.sql menu.sql"
+SQL_SCRIPTS_DIR=src/main/sql
+MAIN_CLASS=net.zyunx.crudsite.tool.RunSQL
+
+PWD=`pwd`
+TOOL_DIR=$(cd `dirname $0`; pwd)
+# echo $TOOL_DIR
+BASE_DIR=`dirname $TOOL_DIR`
+echo cd to base dir $BAS_EDIR
+cd $BASE_DIR
+
+echo compile
+mvn compile
+
+#echo main class: ${MAIN_CLASS}
+SQL_SCRIPT_FILES=`echo "${SQL_SCRIPTS}" | tr ' ' '\n' | sed -e "s:^:${SQL_SCRIPTS_DIR}/:" | tr '\n' ' '`
+#echo sql: $SQL_SCRIPT_FILES
+
+echo execute sql scripts
+cat $SQL_SCRIPT_FILES | mvn exec:java -Dexec.mainClass=${MAIN_CLASS}
+
+# cd back
+cd $PWD

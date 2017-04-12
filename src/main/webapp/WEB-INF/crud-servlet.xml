@@ -12,6 +12,15 @@
 	<mvc:annotation-driven />
 	<context:component-scan base-package="net.zyunx.crudsite" />
 
+    <bean
+        class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <array>
+                <value>classpath:dbconfig.properties</value>
+            </array>
+        </property>
+    </bean>
+    
 	<bean id="viewResolver"
 		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 		<property name="prefix" value="/WEB-INF/jsp/" />
@@ -22,10 +31,10 @@
 
 	<bean id="dataSource"
 		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
-		<property name="url" value="jdbc:mysql://localhost:3306/crudweb" />
-		<property name="username" value="crudweb" />
-		<property name="password" value="crudweb" />
+		<property name="driverClassName" value="${db.driver}" />
+        <property name="url" value="${db.url}" />
+        <property name="username" value="${db.username}" />
+        <property name="password" value="${db.password}" />
 	</bean>
 
 	<bean id="sqlTemplate" class="net.zyunx.crudsite.commons.dao.jdbc.SqlTemplate">
