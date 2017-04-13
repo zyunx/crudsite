@@ -9,11 +9,17 @@
 				<a href="${pageContext.request.contextPath}/${menu.itemUrl}">${menu.itemText}</a>
 			</c:otherwise>
 		</c:choose>
-		<span style="float:right">
-		<a href="updateMenuItem?itemName=${menu.itemName}">编辑</a>
-		<a href="addMenuItem?itemParent=${menu.itemName}">添加子菜单项</a>
-		</span>
+		
 	</div>
+	<div class="operation-panel">
+        <a href="updateMenuItem?itemName=${menu.itemName}">编辑</a>
+        <a href="addMenuItem?itemParent=${menu.itemName}">添加子菜单项</a>
+        <form action="deleteMenuItem" method="post" style="display:inline-block">
+            <input type="hidden" name="itemName" value="${menu.itemName}"/>
+            <input type="submit" value="delete"/>
+        </form>
+        <span style="clear:right"></span>
+    </div>
 	<c:if test="${not empty menu.submenu}">
 		<ul>
 			<c:forEach items="${menu.submenu}" var="m">

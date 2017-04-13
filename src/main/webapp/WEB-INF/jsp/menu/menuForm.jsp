@@ -10,10 +10,11 @@
 <body>
 <h1>Menu form </h1>
 <form action="${form.action}" method="${form.method}">
-	菜单名: <input type="text" name="itemName"/>
-	<p/>菜单显示文本: <input type="text" name="itemText"/>
-	<p/>菜单URL: <input type="text" name="itemUrl"/>
-	<input type="hidden" name="itemParent" value="${form.menuItem.itemParent}"/>
+	菜单名: <input type="text" name="itemName" value="${form.menuItem.itemName}"/>
+	<p/>菜单显示文本: <input type="text" name="itemText" value="${form.menuItem.itemText}"/>
+	<p/>菜单URL: <input type="text" name="itemUrl" value="${form.menuItem.itemUrl}"/>
+	<p/>菜单排序: <input type="text" name="itemOrder" value="${form.menuItem.itemOrder}"/>
+	<p/>父菜单<input type="text" name="itemParent" value="${form.menuItem.itemParent}"/>
 	<input type="submit" value="create"/>
 </form>
 </body>

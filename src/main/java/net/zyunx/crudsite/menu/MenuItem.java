@@ -4,6 +4,7 @@ public class MenuItem {
 	private String itemName;
 	private String itemText;
 	private String itemUrl;
+	private int itemOrder;
 	private String itemParent;
 	
 	public String getItemName() {
@@ -30,6 +31,11 @@ public class MenuItem {
 	public void setItemParent(String itemParent) {
 		this.itemParent = itemParent;
 	}
-	
+	public int getItemOrder() {
+		return itemOrder;
+	}
+	public void setItemOrder(int itemOrder) {
+		this.itemOrder = itemOrder;
+	}
 	
 }

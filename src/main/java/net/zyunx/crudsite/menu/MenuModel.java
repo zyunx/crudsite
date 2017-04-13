@@ -6,6 +6,7 @@ public class MenuModel {
 	private String itemName;
 	private String itemText;
 	private String itemUrl;
+	private int itemOrder;
 	private List<MenuModel> submenu;
 	public String getItemName() {
 		return itemName;
@@ -31,4 +32,12 @@ public class MenuModel {
 	public void setSubmenu(List<MenuModel> submenu) {
 		this.submenu = submenu;
 	}
+	public int getItemOrder() {
+		return itemOrder;
+	}
+	public void setItemOrder(int itemOrder) {
+		this.itemOrder = itemOrder;
+	}
+	
+	
 }

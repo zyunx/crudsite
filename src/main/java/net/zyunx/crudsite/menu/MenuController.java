@@ -1,8 +1,8 @@
 package net.zyunx.crudsite.menu;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.servlet.ServletContext;
@@ -17,7 +17,6 @@ import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import net.zyunx.crudsite.commons.dao.jdbc.ResultSetCallback;
 import net.zyunx.crudsite.commons.dao.jdbc.SqlTemplate;
 import net.zyunx.crudsite.message.controller.MessageController;
 
@@ -34,31 +33,8 @@ public class MenuController implements ServletContextAware {
 	
 	ServletContext servletContext;
 	
-	String urlOfListMenu() {
-		return "menu/listMenu";
-	}
-	@RequestMapping(value="/listMenu", method=RequestMethod.GET)
-	public ModelAndView listMenu() {
+	public MenuModel constructMenuModel(List<MenuItem> menuItemList) {
 		MenuModel menu = null;
-		final List<MenuItem> menuItemList = new ArrayList<MenuItem>(200);
-		this.sqlTemplate.query("select item_name, item_text, item_url, item_parent from menu_items",
-				new Object[] {}, new ResultSetCallback<Void>() {
-			
-					public Void doWithResultSet(ResultSet rs) throws SQLException {
-						while (rs.next()) {
-							MenuItem mi = new MenuItem();
-							mi.setItemName(rs.getString("item_name"));
-							mi.setItemText(rs.getString("item_text"));
-							mi.setItemUrl(rs.getString("item_url"));
-							mi.setItemParent(rs.getString("item_parent"));
-							
-							menuItemList.add(mi);
-						}
-						return null;
-					}
-			
-		});
-		
 		for (MenuItem i : menuItemList) {
 			if (i.getItemName().equals("root")) {
 				menu = new MenuModel();
@@ -72,6 +48,16 @@ public class MenuController implements ServletContextAware {
 		if (menu != null) {
 			menu.setSubmenu(submenuOf(menu.getItemName(), menuItemList));
 		}
+		return menu;
+	}
+	
+	String urlOfListMenu() {
+		return "menu/listMenu";
+	}
+	@RequestMapping(value="/listMenu", method=RequestMethod.GET)
+	public ModelAndView listMenu() {
+		
+		MenuModel menu = constructMenuModel(this.menuBO.listAllMenuItems());
 		
 		ModelAndView mv = new ModelAndView();
 		mv.addObject("menu", menu);
@@ -89,10 +75,18 @@ public class MenuController implements ServletContextAware {
 			submenu.setItemName(mi.getItemName());
 			submenu.setItemText(mi.getItemText());
 			submenu.setItemUrl(mi.getItemUrl());
-			logger.info(submenu.getItemName());
+			submenu.setItemOrder(mi.getItemOrder());
 			submenu.setSubmenu(submenuOf(mi.getItemName(), menuItemList));
 			menu.add(submenu);
 		}
+		
+		Collections.sort(menu, new Comparator<MenuModel>() {
+
+			public int compare(MenuModel o1, MenuModel o2) {
+				return o1.getItemOrder() - o2.getItemOrder();
+			}
+			
+		});
 		return menu;
 	}
 	
@@ -114,33 +108,75 @@ public class MenuController implements ServletContextAware {
 		mv.setViewName("/menu/menuForm");
 		return mv;
 	}
+	
 	@RequestMapping(value="/addMenuItem", method=RequestMethod.POST)
 	public ModelAndView addMenuItem(MenuItem menuItem,
 			RedirectAttributes redirectAttributes) {
 		if (this.menuBO.doesMenuItemExist(menuItem.getItemName())) {
 			return MessageController.redirectView(redirectAttributes, 
-					urlOfListMenu(), "菜单" + menuItem.getItemName() + "已存在");
+					urlOfListMenu(), "菜单项" + menuItem.getItemName() + "已存在");
 		}
 		
-		this.sqlTemplate.execute("insert into menu_items (item_name, item_text, item_url, item_parent)"
-				+ " values (?, ?, ?, ?)",
+		this.sqlTemplate.execute("insert into menu_items (item_name, item_text, item_url, item_parent, item_order)"
+				+ " values (?, ?, ?, ?, ?)",
 				new Object[] {
 						menuItem.getItemName(),
 						menuItem.getItemText(), 
 						menuItem.getItemUrl(),
-						menuItem.getItemParent()});
+						menuItem.getItemParent(),
+						menuItem.getItemOrder()});
 		
 		return MessageController.redirectView(redirectAttributes, 
 				urlOfListMenu(), "菜单" + menuItem.getItemName() + "创建成功");
 	}
-	public ModelAndView updateMenuItemForm() {
-		return null;
+	
+	@RequestMapping(value="/updateMenuItem", method=RequestMethod.GET)
+	public ModelAndView updateMenuItemForm(String itemName,
+			RedirectAttributes redirectAttributes) {
+		MenuItem menuItem = this.menuBO.findMenuItem(itemName);
+		if (menuItem == null) {
+			return MessageController.redirectView(redirectAttributes, 
+					urlOfListMenu(), "菜单项" + itemName + "不存在");
+		}
+		MenuItemForm form = new MenuItemForm();
+		form.setMenuItem(menuItem);
+		ModelAndView mv = new ModelAndView();
+		mv.addObject("form", form);
+		mv.setViewName("/menu/menuForm");
+		return mv;
 	}
-	public ModelAndView updateMenuItem() {
-		return null;
+	
+	@RequestMapping(value="/updateMenuItem", method=RequestMethod.POST)
+	public ModelAndView updateMenuItem(MenuItem menuItem,
+			RedirectAttributes redirectAttributes) {
+		if (!this.menuBO.doesMenuItemExist(menuItem.getItemName())) {
+			return MessageController.redirectView(redirectAttributes, 
+					urlOfListMenu(), "菜单项" + menuItem.getItemName() + "不存在");
+		}
+		
+		this.sqlTemplate.execute("update menu_items set"
+				+ " item_text = ?, item_url = ?, item_parent = ?, item_order = ?"
+				+ " where item_name = ?",
+				new Object[] {menuItem.getItemText(), menuItem.getItemUrl(),
+						menuItem.getItemParent(), menuItem.getItemOrder(), menuItem.getItemName()});
+		
+		return MessageController.redirectView(redirectAttributes, 
+				urlOfListMenu(), "菜单项" + menuItem.getItemName() + "更新成功");
 	}
-	public ModelAndView deleteMenuItem() {
-		return null;
+	
+	@RequestMapping(value="/deleteMenuItem", method=RequestMethod.POST)
+	public ModelAndView deleteMenuItem(String itemName,
+			RedirectAttributes redirectAttributes) {
+		if (!this.menuBO.doesMenuItemExist(itemName)) {
+			return MessageController.redirectView(redirectAttributes, 
+					urlOfListMenu(), "菜单项" + itemName + "不存在");
+		}
+		
+		this.sqlTemplate.execute("delete from menu_items where item_name = ?",
+				new Object[] {itemName});
+		
+		return MessageController.redirectView(redirectAttributes, 
+				urlOfListMenu(), "菜单项" + itemName + "删除成功");
 	}
 	public void setServletContext(ServletContext servletContext) {
 		this.servletContext = servletContext;
