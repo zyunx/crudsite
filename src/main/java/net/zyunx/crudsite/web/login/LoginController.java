@@ -1,4 +1,4 @@
-package net.zyunx.crudsite.login.controller;
+package net.zyunx.crudsite.web.login;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -17,8 +17,9 @@ import net.zyunx.crudsite.auth.bo.AuthBO;
 import net.zyunx.crudsite.login.LoginUtil;
 import net.zyunx.crudsite.message.controller.MessageController;
 
+@Controller
 public class LoginController {
-	protected Log logger = LogFactory.getLog(LoginController.class);
+	private static final Log logger = LogFactory.getLog(LoginController.class);
 	
 	@Autowired
 	AuthService authService;

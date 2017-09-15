@@ -40,5 +40,9 @@
 	<bean id="sqlTemplate" class="net.zyunx.crudsite.commons.dao.jdbc.SqlTemplate">
 		<property name="dataSource" ref="dataSource" />
 	</bean>
+	
+	<bean class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
 
 </beans>

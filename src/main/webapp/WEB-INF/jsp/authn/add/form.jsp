@@ -4,14 +4,16 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Login Form</title>
+<title>Insert title here</title>
 </head>
 <body>
-<p>Login Form</p>
-<form action="login" method="post">
+<p>To add an account</p>
+<form action="" method="post">
 	User name: <input id="userNameInput" type="text" name="userName" />
-	<p/>Password: <input type="password" name="password" />
-	<p/><input type="submit" value="login"/>
+	<p/>
+	Password: <input type="password" name="password" />
+	<p/>
+	<input type="submit" value="login"/>
 </form>
 <script>
 (function() {
